@@ -1,9 +1,6 @@
 local component = require("component")
+local me = component.me_interface or component.me_controller
 local term = require("term")
-local event = require("event")
-local sides = require("sides")
-local me = component.me_controller -- Или me_interface
-local computer = require("computer")
 
 local function waitForCraftingCompletion(craftTask)
   while true do
@@ -14,47 +11,44 @@ local function waitForCraftingCompletion(craftTask)
   end
 end
 
-local function craftTrinium(amount)
+local function craftTritium(amount)
   local items = me.getItemsInNetwork()
 
-  local tritiumPattern
+  local targetItem
   for _, item in ipairs(items) do
     if item.label and string.lower(item.label):find("tritium") then
-      tritiumPattern = item
+      targetItem = item
       break
     end
   end
 
-  if not tritiumPattern then
-    print("❌ Шаблон трития не найден в сети ME.")
+  if not targetItem then
+    print("❌ Тритий не найден.")
     return
   end
 
-  local craft = me.getCraftables({name = tritiumPattern.name})
-  if #craft == 0 then
-    print("❌ Крафт для " .. tritiumPattern.name .. " не найден.")
+  local craftables = me.getCraftables({name = targetItem.name})
+  if #craftables == 0 then
+    print("❌ Нет шаблона для крафта.")
     return
   end
 
-  local request = craft[1].request(amount)
-  print("✅ Крафт трития запущен. Ожидаем завершения...")
+  local craft = craftables[1].request(amount)
+  print("⏳ Крафт запущен...")
 
-  if waitForCraftingCompletion(request) then
-    print("✅ Крафт трития завершен!")
+  if waitForCraftingCompletion(craft) then
+    print("✅ Крафт завершён!")
   else
-    print("❌ Ошибка при крафте.")
+    print("❌ Ошибка крафта.")
   end
 end
 
--- Главный цикл
 term.clear()
-print("🔧 Автокрафт трития через ME-сеть")
-print("Введите количество трития для крафта: ")
-local input = io.read()
-local count = tonumber(input)
+print("Введите кол-во трития для крафта:")
+local count = tonumber(io.read())
 
 if count and count > 0 then
-  craftTrinium(count)
+  craftTritium(count)
 else
-  print("❌ Неверное число.")
+  print("❌ Введено некорректное число.")
 end
